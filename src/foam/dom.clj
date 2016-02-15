@@ -1,6 +1,7 @@
 (ns foam.dom
   (:require [clojure.string :as str]
-            [foam.core :as foam]))
+            [foam.core :as foam]
+            [pandect.algo.adler32 :refer [adler32]]))
 
 ;; tags that om.dom defines functions for
 (def om-tags
@@ -276,7 +277,13 @@
      (update-in elem [:children] (fn [children]
                                    (map-indexed (fn [i c]
                                                   (assign-react-ids c (conj id i))) children))))))
+
 (defn render-to-string [com]
   (let [elem (foam/react-render com)
-        elem (assign-react-ids elem)]
-    (foam/-render-to-string elem)))
+        elem (assign-react-ids elem)
+        elem-str (foam/-render-to-string elem)
+        checksum (adler32 elem-str)
+        result (str/replace-first elem-str
+                            #"(>)"
+                            (str " data-react-checksum=\"" checksum \"">" ))]
+    elem-str))
