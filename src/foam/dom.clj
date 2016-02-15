@@ -180,11 +180,20 @@
   (assert (vector? react-id))
   (str "." (str/join "." react-id)))
 
+(defn attributes [attrs react-id]
+  "Returns an array-map where attributes are ordered as they
+   were defined, with class and then data-reactid appended"
+  (let [class (get attrs :class)]
+    (-> attrs
+        (dissoc :class)
+        (assoc :class class)
+        (assoc :data-reactid (react-id-str react-id)))))
+
 (defn render-element
   "Render an tag vector as a HTML element string."
   [{:keys [tag attrs react-id children]}]
   (assert react-id)
-  (let [attrs (merge {:data-reactid (react-id-str react-id)} attrs)]
+  (let [attrs (attributes attrs react-id)]
     (if (container-tag? tag (seq children))
       (str "<" tag (render-attr-map attrs) ">"
            (apply str (clojure.core/map foam/-render-to-string children))
